@@ -21,35 +21,6 @@ router.post("/post", async (req, res) => {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    router.post("/post-audio", async (req, res) => {
-  const { author, audioUrl, audioDuration } = req.body;
-
-  // ⏰ TIME RESTRICTION (IST)
-  const now = new Date();
-  const hoursIST = (now.getUTCHours() + 5.5) % 24;
-
-  if (hoursIST < 14 || hoursIST >= 19) {
-    return res.status(403).json({
-      error: "Audio tweets allowed only between 2PM and 7PM IST",
-    });
-  }
-
-  if (audioDuration > 300) {
-    return res.status(400).json({
-      error: "Audio exceeds 5 minutes",
-    });
-  }
-
-  const tweet = await Tweet.create({
-    author,
-    audioUrl,
-    audioDuration,
-    isAudioTweet: true,
-  });
-
-  res.json(tweet);
-});
-
     // 🔍 keyword detection
     const hasKeyword = KEYWORDS.some((k) =>
       content.toLowerCase().includes(k)
@@ -75,5 +46,43 @@ router.post("/post", async (req, res) => {
   }
 });
 
-export default router;
+/* 🔊 CREATE AUDIO TWEET */
+router.post("/post-audio", async (req, res) => {
+  try {
+    const { author, audioUrl, audioDuration } = req.body;
 
+    if (!author || !audioUrl) {
+      return res.status(400).json({ message: "Missing fields" });
+    }
+
+    // ⏰ TIME RESTRICTION (IST)
+    const now = new Date();
+    const hoursIST = (now.getUTCHours() + 5.5) % 24;
+
+    if (hoursIST < 14 || hoursIST >= 19) {
+      return res.status(403).json({
+        error: "Audio tweets allowed only between 2PM and 7PM IST",
+      });
+    }
+
+    if (audioDuration > 300) {
+      return res.status(400).json({
+        error: "Audio exceeds 5 minutes",
+      });
+    }
+
+    const tweet = await Tweet.create({
+      author,
+      audioUrl,
+      audioDuration,
+      isAudioTweet: true,
+    });
+
+    res.json(tweet);
+  } catch (error) {
+    console.error("Create audio tweet error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+export default router;

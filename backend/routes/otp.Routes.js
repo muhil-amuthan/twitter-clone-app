@@ -1,6 +1,5 @@
 import express from "express";
 import nodemailer from "nodemailer";
-import otpRoutes from "./routes/otpRoutes.js";
 
 const router = express.Router();
 
@@ -11,7 +10,6 @@ const otpStore = new Map();
  * 📩 SEND OTP
  * POST /otp/send
  */
-router.post("/send", sendOtp);
 router.post("/send", async (req, res) => {
   try {
     const { email } = req.body;

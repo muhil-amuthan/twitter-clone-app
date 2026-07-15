@@ -1,24 +1,28 @@
-const PDFDocument = require("pdfkit");
-const fs = require("fs");
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
 
-exports.generateInvoice = (userId,plan,amount,txnId)=>{
+export function generateInvoice(userId, plan, amount, txnId) {
+  const doc = new PDFDocument();
+  const invoiceDir = path.join(process.cwd(), "invoices");
+  
+  // Create invoices directory if it doesn't exist
+  if (!fs.existsSync(invoiceDir)) {
+    fs.mkdirSync(invoiceDir, { recursive: true });
+  }
+  
+  const filePath = path.join(invoiceDir, `${txnId}.pdf`);
 
- const doc = new PDFDocument();
+  doc.pipe(fs.createWriteStream(filePath));
 
- const path = `invoices/${txnId}.pdf`;
+  doc.fontSize(20).text("Subscription Invoice");
+  doc.moveDown();
+  doc.text(`User: ${userId}`);
+  doc.text(`Plan: ${plan}`);
+  doc.text(`Amount: ₹${amount}`);
+  doc.text(`Transaction ID: ${txnId}`);
 
- doc.pipe(fs.createWriteStream(path));
+  doc.end();
 
- doc.fontSize(20).text("Subscription Invoice");
-
- doc.moveDown();
-
- doc.text("User: "+userId);
- doc.text("Plan: "+plan);
- doc.text("Amount: ₹"+amount);
- doc.text("Transaction ID: "+txnId);
-
- doc.end();
-
- return path;
+  return filePath;
 }
